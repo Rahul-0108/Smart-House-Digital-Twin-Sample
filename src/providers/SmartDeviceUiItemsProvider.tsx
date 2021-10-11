@@ -13,7 +13,7 @@ import {
 } from "@bentley/ui-abstract";
 import { Toggle } from "@bentley/ui-core";
 import React from "react";
-import CameraPath from "./CameraPath";
+import CameraView from "./CameraView";
 import { SmartDeviceProperties } from "./SmartDeviceProperties";
 import { SmartDeviceListWidgetComponent } from "./SmartDeviceListWidgetComponent";
 
@@ -127,7 +127,7 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
    const modelViewwidget: AbstractWidgetProps = {
     id: "modelViewWidget", // We should define id to Correctly Save and Restore App Layout
     label: "Model View", // Header of Widget
-    getWidgetContent: () => <CameraPath></CameraPath>,
+    getWidgetContent: () => <CameraView></CameraView>,
    };
 
    widgets.push(backgroundColorWidget);

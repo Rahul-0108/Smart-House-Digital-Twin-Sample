@@ -5,7 +5,7 @@ import { Subject } from "rxjs";
 
 export const elementSubject = new Subject<any>();
 
-export function SmartDeviceProperties(props: any) {
+export function SmartDeviceProperties() {
  const [element, setElement] = useState<any>();
  useEffect(() => {
   elementSubject.subscribe((value) => setElement(value));

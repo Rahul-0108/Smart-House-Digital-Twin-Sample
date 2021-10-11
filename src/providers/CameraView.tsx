@@ -52,7 +52,7 @@ const savedCameraViewButtons = savedCameraViews.map((view, index) => (
  >{`Saved View ${index + 1}`}</Button>
 ));
 
-function CameraPath() {
+function CameraView() {
  const [currentEyePoint, setCurrentEyePoint] = useState<Point3d>();
  const [currentTargetPoint, setCurrentargetPoint] = useState<Point3d>();
 
@@ -110,4 +110,4 @@ function CameraPath() {
  );
 }
 
-export default CameraPath;
+export default CameraView;
