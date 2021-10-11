@@ -12,6 +12,7 @@ import React, { useContext } from "react";
 import ViewerContext from "./ViewerContext";
 import { ColorTheme } from "@bentley/ui-framework";
 import onIModelConnected from "./onIModelConnected";
+import { SmartDeviceUiItemsProvider } from "providers/SmartDeviceUiItemsProvider";
 
 const ViewerStartup: React.FC = () => {
  const { contextId, iModelId, authOptions } = useContext(ViewerContext);
@@ -52,6 +53,7 @@ const ViewerStartup: React.FC = () => {
    theme={ColorTheme.Light}
    viewCreatorOptions={{ viewportConfigurer: viewConfiguration }}
    onIModelConnected={onIModelConnected}
+   uiProviders={[new SmartDeviceUiItemsProvider()]} // We  Need to Register thr Provider to  The  Viewer
   />
  );
 };
