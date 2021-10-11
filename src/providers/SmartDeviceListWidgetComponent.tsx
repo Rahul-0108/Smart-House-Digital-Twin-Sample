@@ -1,6 +1,9 @@
 import { IModelApp, StandardViewId } from "@bentley/imodeljs-frontend";
 import { UiFramework } from "@bentley/ui-framework";
 import * as React from "react";
+import { connect } from "react-redux";
+import { setSelectedElement } from "Redux/Action";
+import { elementSubject } from "./SmartDeviceProperties";
 
 export function SmartDeviceListWidgetComponent() {
  const [smartTableList, setSmartTableList] = React.useState<JSX.Element[]>([]);
@@ -8,11 +11,8 @@ export function SmartDeviceListWidgetComponent() {
  React.useEffect(() => {
   (async () => {
    const query = `
-  SELECT EcInstanceId,SmartDeviceId,SmartDeviceType,
-          Origin
-          FROM DgnCustomItemTypes_HouseSchema.SmartDevice
-          WHERE Origin IS NOT NULL
-`;
+   SELECT * FROM DgnCustomItemTypes_HouseSchema.SmartDevice WHERE Origin IS NOT NULL
+   `;
    const results = UiFramework.getIModelConnection()?.query(query);
    const values = [];
    for await (const row of results!) {
@@ -27,6 +27,7 @@ export function SmartDeviceListWidgetComponent() {
         animateFrustumChange: true,
         standardViewId: StandardViewId.RightIso,
        });
+       elementSubject.next(value);
       }}
      >
       <th>{value.smartDeviceType}</th>
@@ -50,3 +51,9 @@ export function SmartDeviceListWidgetComponent() {
   </table>
  );
 }
+
+// const mapDispatchToProps = (dispatch: any) => {
+//  return { setSelectedElement: (element: any) => dispatch(setSelectedElement(element)) };
+// };
+
+// export default connect(undefined, mapDispatchToProps)(SmartDeviceListWidgetComponent);

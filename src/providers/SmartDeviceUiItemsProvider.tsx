@@ -1,3 +1,4 @@
+import { ColorDef } from "@bentley/imodeljs-common";
 import { IModelApp } from "@bentley/imodeljs-frontend";
 import {
  UiItemsProvider,
@@ -10,12 +11,17 @@ import {
  StagePanelSection,
  AbstractWidgetProps,
 } from "@bentley/ui-abstract";
+import { Toggle } from "@bentley/ui-core";
 import React from "react";
+import CameraPath from "./CameraPath";
+import { SmartDeviceProperties } from "./SmartDeviceProperties";
 import { SmartDeviceListWidgetComponent } from "./SmartDeviceListWidgetComponent";
 
 export class SmartDeviceUiItemsProvider implements UiItemsProvider {
  public readonly id = "SmartDeviceUiProvider";
  private _toggleWalls: boolean = false;
+ private static toggledOnce: boolean = false;
+ private static originalColor: number;
 
  public provideToolbarButtonItems(
   stageId: string,
@@ -81,8 +87,29 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
   section?: StagePanelSection
  ): ReadonlyArray<AbstractWidgetProps> {
   const widgets: AbstractWidgetProps[] = [];
-
   if (stageId === "DefaultFrontstage" && location === StagePanelLocation.Right) {
+   const backgroundColorWidget: AbstractWidgetProps = {
+    id: "BackgroundColorWidget",
+    label: "Background Color Toggle",
+    getWidgetContent() {
+     return (
+      <Toggle
+       onChange={(toggle) => {
+        if (SmartDeviceUiItemsProvider.toggledOnce === false) {
+         SmartDeviceUiItemsProvider.originalColor = IModelApp.viewManager.selectedView!.displayStyle.backgroundColor.tbgr;
+         SmartDeviceUiItemsProvider.toggledOnce = true;
+        }
+
+        const color = toggle ? ColorDef.computeTbgrFromString("skyblue") : SmartDeviceUiItemsProvider.originalColor;
+        IModelApp.viewManager.selectedView!.overrideDisplayStyle({
+         backgroundColor: color,
+        });
+       }}
+      />
+     );
+    },
+   };
+
    const widget: AbstractWidgetProps = {
     id: "smartDeviceListWidget", // We should define id to Correctly Save and Restore App Layout
     label: "Smart Devices", // Header of Widget
@@ -91,7 +118,22 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
      return <SmartDeviceListWidgetComponent></SmartDeviceListWidgetComponent>;
     },
    };
+
+   const propertiesWidget: AbstractWidgetProps = {
+    id: "SmartDevicePropertiesWidget",
+    label: "Smart Device Properties",
+    getWidgetContent: () => <SmartDeviceProperties></SmartDeviceProperties>,
+   };
+   const modelViewwidget: AbstractWidgetProps = {
+    id: "modelViewWidget", // We should define id to Correctly Save and Restore App Layout
+    label: "Model View", // Header of Widget
+    getWidgetContent: () => <CameraPath></CameraPath>,
+   };
+
+   widgets.push(backgroundColorWidget);
    widgets.push(widget);
+   widgets.push(propertiesWidget);
+   widgets.push(modelViewwidget);
   }
   return widgets;
  }
