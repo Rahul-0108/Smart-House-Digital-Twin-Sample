@@ -11,11 +11,19 @@ import React, { useContext, useEffect, useState } from "react";
 import { browserhistory } from "./browserhistory";
 import ViewerContext from "./ViewerContext";
 import ViewerStartup from "./ViewerStartup";
+import { AccessToken } from "@bentley/itwin-client";
+import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
 
 const App: React.FC = () => {
  const { contextId, iModelId, authOptions } = useContext(ViewerContext);
  const [currContextId, setCurrContextId] = useState(contextId);
  const [currIModelId, setCurrIModelId] = useState(iModelId);
+
+ function _onUserStateChanged(token: AccessToken | undefined) {
+  if (token) {
+   ProductSettingsService.Instance(token);
+  }
+ }
 
  /** Ensure client variables exist. */
  if (!process.env.IMJS_AUTH_CLIENT_CLIENT_ID) {
@@ -62,8 +70,11 @@ const App: React.FC = () => {
   throw new Error("Please provide a valid AuthOptions file.");
  }
 
+ // TODO :The current sign-in process needs to be modified
+
  /** Handle the callback, otherwise just signin. */
  BrowserAuthorizationCallbackHandler.handleSigninCallback(process.env.IMJS_AUTH_CLIENT_REDIRECT_URI).then(() => {
+  client.onUserStateChanged.addListener(_onUserStateChanged);
   client.signIn(new FrontendRequestContext());
  });
  useEffect(() => {

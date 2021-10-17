@@ -1,7 +1,8 @@
 import { Point3d, Vector3d } from "@bentley/geometry-core";
 import { IModelApp, ViewState3d } from "@bentley/imodeljs-frontend";
 import { Button, Input } from "@bentley/ui-core";
-import React, { useState } from "react";
+import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
+import React, { useState, useEffect } from "react";
 
 const savedCameraViews = [
  {
@@ -53,46 +54,102 @@ const savedCameraViewButtons = savedCameraViews.map((view, index) => (
 ));
 
 function CameraView() {
- const [currentEyePoint, setCurrentEyePoint] = useState<Point3d>();
- const [currentTargetPoint, setCurrentargetPoint] = useState<Point3d>();
+ const [currentCameraPoint, setCurrentCameraPoint] = useState<{ eye: Point3d | undefined; target: Point3d | undefined }>();
+
+ useEffect(() => {
+  setTimeout(() => {
+   ProductSettingsService.Instance()
+    .getUserSetting(
+     "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
+     "UserCameraSettings",
+     true,
+     process.env.IMJS_CONTEXT_ID!,
+     process.env.IMJS_IMODEL_ID
+    )
+    .then((data) => {
+     if (data?.setting) {
+      const cameraPoint = JSON.parse(data.setting);
+      if (cameraPoint) {
+       setCurrentCameraPoint({
+        eye: cameraPoint.eye.x ? Point3d.fromJSON(cameraPoint.eye) : undefined,
+        target: cameraPoint.target.x ? Point3d.fromJSON(cameraPoint.target) : undefined,
+       });
+      }
+     }
+    });
+  }, 20);
+ }, []);
 
  return (
   <div>
    <Button
     style={{ marginTop: "12px", marginLeft: "8px" }}
-    onClick={() => {
+    onClick={async () => {
      const currentEye = (IModelApp.viewManager.selectedView?.view as ViewState3d).getEyePoint();
-     setCurrentEyePoint(new Point3d(currentEye.x, currentEye.y, currentEye.z));
+     await ProductSettingsService.Instance().saveUserSetting(
+      JSON.stringify({
+       eye: { x: currentEye?.x, y: currentEye.y, z: currentEye?.z },
+       target: { x: currentCameraPoint?.target?.x, y: currentCameraPoint?.target?.y, z: currentCameraPoint?.target?.z },
+      }),
+      "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
+      "UserCameraSettings",
+      true,
+      process.env.IMJS_CONTEXT_ID!,
+      process.env.IMJS_IMODEL_ID
+     );
+     setCurrentCameraPoint({ eye: new Point3d(currentEye.x, currentEye.y, currentEye.z), target: currentCameraPoint?.target! });
     }}
    >
-    Camera Eye
+    {IModelApp.i18n.translate("Camera:camera.cameraEye")}
    </Button>
    <Input
     style={{ width: "88%", marginTop: "8px", marginLeft: "8px" }}
-    value={currentEyePoint ? `{ x: ${currentEyePoint?.x}, y: ${currentEyePoint?.y}, z: ${currentEyePoint?.z} }` : ""}
+    value={
+     currentCameraPoint?.eye
+      ? `{ x: ${currentCameraPoint.eye?.x}, y: ${currentCameraPoint.eye?.y}, z: ${currentCameraPoint.eye?.z} }`
+      : ""
+    }
    />
 
    <Button
     style={{ marginTop: "12px", marginLeft: "8px" }}
-    onClick={() => {
+    onClick={async () => {
      const currentTarget = (IModelApp.viewManager.selectedView?.view as ViewState3d).getTargetPoint();
-     setCurrentargetPoint(new Point3d(currentTarget.x, currentTarget.y, currentTarget.z));
+     await ProductSettingsService.Instance().saveUserSetting(
+      JSON.stringify({
+       eye: { x: currentCameraPoint?.eye?.x, y: currentCameraPoint?.eye?.y, z: currentCameraPoint?.eye?.z },
+       target: { x: currentTarget?.x, y: currentTarget.y, z: currentTarget?.z },
+      }),
+      "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
+      "UserCameraSettings",
+      true,
+      process.env.IMJS_CONTEXT_ID!,
+      process.env.IMJS_IMODEL_ID
+     );
+     setCurrentCameraPoint({
+      eye: currentCameraPoint?.eye!,
+      target: new Point3d(currentTarget.x, currentTarget.y, currentTarget.z),
+     });
     }}
    >
     Camera Direction
    </Button>
    <Input
     style={{ width: "88%", marginTop: "8px", marginLeft: "8px" }}
-    value={currentTargetPoint ? `{ x: ${currentTargetPoint?.x}, y: ${currentTargetPoint?.y}, z: ${currentTargetPoint?.z} }` : ""}
+    value={
+     currentCameraPoint?.target
+      ? `{ x: ${currentCameraPoint?.target?.x}, y: ${currentCameraPoint?.target?.y}, z: ${currentCameraPoint?.target?.z} }`
+      : ""
+    }
    />
 
    <Button
     style={{ marginTop: "12px", marginLeft: "8px" }}
     onClick={async () => {
-     if (currentEyePoint && currentTargetPoint) {
+     if (currentCameraPoint && currentCameraPoint?.eye && currentCameraPoint?.target) {
       (IModelApp.viewManager.selectedView?.view as ViewState3d).lookAtUsingLensAngle(
-       currentEyePoint,
-       currentTargetPoint,
+       currentCameraPoint?.eye,
+       currentCameraPoint?.target,
        new Vector3d(0, 0, 1),
        (IModelApp.viewManager.selectedView?.view as ViewState3d).camera.lens,
        undefined,

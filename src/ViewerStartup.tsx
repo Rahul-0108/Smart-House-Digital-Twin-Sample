@@ -54,6 +54,7 @@ const ViewerStartup: React.FC = () => {
    viewCreatorOptions={{ viewportConfigurer: viewConfiguration }}
    onIModelConnected={onIModelConnected}
    uiProviders={[new SmartDeviceUiItemsProvider()]} // We  Need to Register thr Provider to  The  Viewer
+   additionalI18nNamespaces={["Widgets"]} // Register localization files on Start
   />
  );
 };

@@ -112,7 +112,7 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
 
    const widget: AbstractWidgetProps = {
     id: "smartDeviceListWidget", // We should define id to Correctly Save and Restore App Layout
-    label: "Smart Devices", // Header of Widget
+    label: IModelApp.i18n.translate("Widgets:widgets.smartDevices"), // Header of Widget
     getWidgetContent: () => {
      // Gets the widget content
      return <SmartDeviceListWidgetComponent></SmartDeviceListWidgetComponent>;
