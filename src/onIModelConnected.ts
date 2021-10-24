@@ -1,10 +1,20 @@
 import { DisplayStyleSettingsProps, RenderMode } from "@bentley/imodeljs-common";
 import { IModelApp, IModelConnection, ScreenViewport } from "@bentley/imodeljs-frontend";
+import { UiItemsArbiter } from "@bentley/ui-abstract";
 import { SmartDeviceDecorator } from "components/decorators/SmartDeviceDecorator";
 import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
+import { ExampleUiItemsApplication } from "providers/ExampleUiItemsApplication";
+import { registerReducers } from "Redux/Reducer";
+import { showMenu } from "ui-core components/Menu";
+import { showToolbar } from "ui-core components/Toolbar";
 
 // Start Coding from Here after the iModel is Connected
 const onIModelConnected = async (_imodel: IModelConnection) => {
+ // https://www.itwinjs.org/learning/ui/abstract/uiitemsprovider/#uiitemsarbiter
+ UiItemsArbiter.uiItemsApplication = new ExampleUiItemsApplication();
+
+ registerReducers(); // Register dynamic Reducers
+
  const registeredNamespace = IModelApp.i18n.registerNamespace("Camera"); // To show how to register a namespace
  await registeredNamespace.readFinished;
 
@@ -97,6 +107,9 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
   // The process of creating View Decorations starts by adding an object that implements the Decorator interface to the ViewManager via the
   // ViewManager.addDecorator method
   IModelApp.viewManager.addDecorator(new SmartDeviceDecorator(vp));
+
+  showMenu();
+  showToolbar();
  });
 };
 

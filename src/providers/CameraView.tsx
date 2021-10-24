@@ -1,8 +1,12 @@
 import { Point3d, Vector3d } from "@bentley/geometry-core";
 import { IModelApp, ViewState3d } from "@bentley/imodeljs-frontend";
 import { Button, Input } from "@bentley/ui-core";
+import { SyncUiEventArgs, SyncUiEventDispatcher } from "@bentley/ui-framework";
 import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
 import React, { useState, useEffect } from "react";
+import { AppActionId } from "Redux/Action";
+import { showCard } from "ui-core components/Card";
+import { SampleModalDialog } from "ui-core components/SampleModalDialog ";
 
 const savedCameraViews = [
  {
@@ -55,8 +59,17 @@ const savedCameraViewButtons = savedCameraViews.map((view, index) => (
 
 function CameraView() {
  const [currentCameraPoint, setCurrentCameraPoint] = useState<{ eye: Point3d | undefined; target: Point3d | undefined }>();
+ const [showDialog, setShowDialog] = useState<boolean>();
 
  useEffect(() => {
+  const handleSyncUiEvent = (args: SyncUiEventArgs) => {
+   if (args.eventIds.has(AppActionId.set_Selected_SmartDevice_Element)) {
+    // Filter the event Id We need
+    setShowDialog(true);
+   }
+  };
+  SyncUiEventDispatcher.onSyncUiEvent.addListener(handleSyncUiEvent); // Listner for SynUiEvents, can listen a Redux Action or an Event fired using
+  // SyncUiEventDispatcher.dispatchSyncUiEvent
   setTimeout(() => {
    ProductSettingsService.Instance()
     .getUserSetting(
@@ -78,11 +91,17 @@ function CameraView() {
      }
     });
   }, 20);
+
+  return () => {
+   SyncUiEventDispatcher.onSyncUiEvent.removeListener(handleSyncUiEvent);
+  };
  }, []);
 
  return (
   <div>
+   {showDialog && <SampleModalDialog opened={true} onResult={() => setShowDialog(false)} />}
    <Button
+    onMouseOver={() => showCard()}
     style={{ marginTop: "12px", marginLeft: "8px" }}
     onClick={async () => {
      const currentEye = (IModelApp.viewManager.selectedView?.view as ViewState3d).getEyePoint();
@@ -157,6 +176,7 @@ function CameraView() {
        { animateFrustumChange: true }
       );
       IModelApp.viewManager.selectedView?.synchWithView();
+      setShowDialog(true);
      }
     }}
    >

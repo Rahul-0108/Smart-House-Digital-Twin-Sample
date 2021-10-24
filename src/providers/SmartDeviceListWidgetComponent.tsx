@@ -1,9 +1,7 @@
-import { IModelApp, StandardViewId } from "@bentley/imodeljs-frontend";
 import { UiFramework } from "@bentley/ui-framework";
 import * as React from "react";
-import { connect } from "react-redux";
-import { setSelectedElement } from "Redux/Action";
-import { elementSubject } from "./SmartDeviceProperties";
+import { AppActionId } from "Redux/Action";
+import { showContextMenu } from "ui-core components/ContextMenu";
 
 export function SmartDeviceListWidgetComponent() {
  const [smartTableList, setSmartTableList] = React.useState<JSX.Element[]>([]);
@@ -23,11 +21,12 @@ export function SmartDeviceListWidgetComponent() {
     tableList.push(
      <tr
       onClick={() => {
-       IModelApp.viewManager.selectedView!.zoomToElements(value.id, {
-        animateFrustumChange: true,
-        standardViewId: StandardViewId.RightIso,
-       });
-       elementSubject.next(value);
+       UiFramework.dispatchActionToStore(AppActionId.set_Selected_SmartDevice_Element, value);
+       //  IModelApp.viewManager.selectedView!.zoomToElements(value.id, {
+       //   animateFrustumChange: true,
+       //   standardViewId: StandardViewId.RightIso,
+       //  });
+       showContextMenu();
       }}
      >
       <th>{value.smartDeviceType}</th>
@@ -52,8 +51,16 @@ export function SmartDeviceListWidgetComponent() {
  );
 }
 
+// need to check in future why mapStateToProps not working while using dynamic registerReducer
+
+// const mapStateToProps = (state: any) => {
+//  return {
+//   element: state.widgetState.selectedElement,
+//  };
+// };
+
 // const mapDispatchToProps = (dispatch: any) => {
 //  return { setSelectedElement: (element: any) => dispatch(setSelectedElement(element)) };
 // };
 
-// export default connect(undefined, mapDispatchToProps)(SmartDeviceListWidgetComponent);
+// export default connect(mapStateToProps, mapDispatchToProps)(SmartDeviceListWidgetComponent);

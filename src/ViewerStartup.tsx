@@ -13,6 +13,8 @@ import ViewerContext from "./ViewerContext";
 import { ColorTheme } from "@bentley/ui-framework";
 import onIModelConnected from "./onIModelConnected";
 import { SmartDeviceUiItemsProvider } from "providers/SmartDeviceUiItemsProvider";
+import { CustomFrontStageProvider } from "CustomFrontStageProviders/CustomFrontStageProvider";
+import { CustomBackstageProvider } from "CustomFrontStageProviders/CustomBackstageProvider";
 
 const ViewerStartup: React.FC = () => {
  const { contextId, iModelId, authOptions } = useContext(ViewerContext);
@@ -55,6 +57,8 @@ const ViewerStartup: React.FC = () => {
    onIModelConnected={onIModelConnected}
    uiProviders={[new SmartDeviceUiItemsProvider()]} // We  Need to Register thr Provider to  The  Viewer
    additionalI18nNamespaces={["Widgets"]} // Register localization files on Start
+   frontstages={[{ provider: new CustomFrontStageProvider() /*,default: true*/, requiresIModelConnection: true }]} // new Custom FrontStage
+   backstageItems={CustomBackstageProvider()}
   />
  );
 };

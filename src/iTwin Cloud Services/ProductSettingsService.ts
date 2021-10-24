@@ -1,8 +1,9 @@
 import { IModelApp } from "@bentley/imodeljs-frontend";
 import { AccessToken, AuthorizedClientRequestContext } from "@bentley/itwin-client";
 import { SettingsResult, SettingsStatus } from "@bentley/product-settings-client";
-import { settings } from "cluster";
 
+//This Product Settings service is a generic way of saving settings information for services in CONNECT.
+//Consumers provide a JSON bag, and we persist it and provide a way to query for it using a namespace/name
 export class ProductSettingsService {
  private static _productSettingsServiceInstance: ProductSettingsService;
  private static _requestContext: AuthorizedClientRequestContext;

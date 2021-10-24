@@ -1,16 +1,16 @@
 import React from "react";
-import { useState, useEffect } from "react";
-import { connect } from "react-redux";
-import { Subject } from "rxjs";
-
-export const elementSubject = new Subject<any>();
+import { useSelector } from "react-redux";
+import { RootState } from "Redux/Reducer";
 
 export function SmartDeviceProperties() {
- const [element, setElement] = useState<any>();
- useEffect(() => {
-  elementSubject.subscribe((value) => setElement(value));
-  return () => elementSubject.unsubscribe();
- }, []);
+ // To configure Redux follow this sample :
+
+ // https://github.com/aruniverse/mytwin-viewer-samples/blob/MarkerTools/src/ui/MarkerTool/Widget.tsx
+ // https://github.com/aruniverse/mytwin-viewer-samples/blob/MarkerTools/src/ui/MarkerTool/UiProvider.tsx
+
+ const element = useSelector<RootState /* RootState type */, any /* output value type example : number | undefined */>(
+  (state: RootState) => state.appState?.selectedSmartDeviceElement
+ );
 
  const tableList: JSX.Element[] = [];
  if (element) {
@@ -48,9 +48,13 @@ export function SmartDeviceProperties() {
  }
 }
 
-// const mapStateToProps = (state: any) => {
+// need to check why mapStateToProps not working while using dynamic registerReducer
+// const mapStateToProps = (state: AppState) => {
 //  return {
-//   selectedElement: state.widgetState.selectedElement,
+//   element: state.widgetState.selectedElement,
 //  };
 // };
-// export default connect(mapStateToProps, undefined)(SmartDeviceProperties);
+// const mapDispatchToProps = (dispatch: any) => {
+//  return { setSelectedElement: (element: any) => dispatch(setSelectedElement(element)) };
+// };
+// export default connect(mapStateToProps)(SmartDeviceProperties);
