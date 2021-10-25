@@ -15,6 +15,7 @@ export const defaultContext: ViewerContext = {
  iModelId: process.env.IMJS_IMODEL_ID ?? "",
  authOptions: {
   config: {
+   // BrowserAuthorizationClientConfiguration
    scope: process.env.IMJS_AUTH_CLIENT_SCOPES ?? "",
    clientId: process.env.IMJS_AUTH_CLIENT_CLIENT_ID ?? "",
    redirectUri: process.env.IMJS_AUTH_CLIENT_REDIRECT_URI ?? "",

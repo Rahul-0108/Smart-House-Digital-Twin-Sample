@@ -71,25 +71,23 @@ function CameraView() {
   SyncUiEventDispatcher.onSyncUiEvent.addListener(handleSyncUiEvent); // Listner for SynUiEvents, can listen a Redux Action or an Event fired using
   // SyncUiEventDispatcher.dispatchSyncUiEvent
   setTimeout(() => {
-   ProductSettingsService.Instance()
-    .getUserSetting(
-     "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
-     "UserCameraSettings",
-     true,
-     process.env.IMJS_CONTEXT_ID!,
-     process.env.IMJS_IMODEL_ID
-    )
-    .then((data) => {
-     if (data?.setting) {
-      const cameraPoint = JSON.parse(data.setting);
-      if (cameraPoint) {
-       setCurrentCameraPoint({
-        eye: cameraPoint.eye.x ? Point3d.fromJSON(cameraPoint.eye) : undefined,
-        target: cameraPoint.target.x ? Point3d.fromJSON(cameraPoint.target) : undefined,
-       });
-      }
+   ProductSettingsService.getUserSetting(
+    "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
+    "UserCameraSettings",
+    true,
+    process.env.IMJS_CONTEXT_ID!,
+    process.env.IMJS_IMODEL_ID
+   ).then((data) => {
+    if (data?.setting) {
+     const cameraPoint = JSON.parse(data.setting);
+     if (cameraPoint) {
+      setCurrentCameraPoint({
+       eye: cameraPoint.eye.x ? Point3d.fromJSON(cameraPoint.eye) : undefined,
+       target: cameraPoint.target.x ? Point3d.fromJSON(cameraPoint.target) : undefined,
+      });
      }
-    });
+    }
+   });
   }, 20);
 
   return () => {
@@ -105,7 +103,7 @@ function CameraView() {
     style={{ marginTop: "12px", marginLeft: "8px" }}
     onClick={async () => {
      const currentEye = (IModelApp.viewManager.selectedView?.view as ViewState3d).getEyePoint();
-     await ProductSettingsService.Instance().saveUserSetting(
+     await ProductSettingsService.saveUserSetting(
       JSON.stringify({
        eye: { x: currentEye?.x, y: currentEye.y, z: currentEye?.z },
        target: { x: currentCameraPoint?.target?.x, y: currentCameraPoint?.target?.y, z: currentCameraPoint?.target?.z },
@@ -134,7 +132,7 @@ function CameraView() {
     style={{ marginTop: "12px", marginLeft: "8px" }}
     onClick={async () => {
      const currentTarget = (IModelApp.viewManager.selectedView?.view as ViewState3d).getTargetPoint();
-     await ProductSettingsService.Instance().saveUserSetting(
+     await ProductSettingsService.saveUserSetting(
       JSON.stringify({
        eye: { x: currentCameraPoint?.eye?.x, y: currentCameraPoint?.eye?.y, z: currentCameraPoint?.eye?.z },
        target: { x: currentTarget?.x, y: currentTarget.y, z: currentTarget?.z },

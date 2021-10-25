@@ -15,8 +15,11 @@ import onIModelConnected from "./onIModelConnected";
 import { SmartDeviceUiItemsProvider } from "providers/SmartDeviceUiItemsProvider";
 import { CustomFrontStageProvider } from "CustomFrontStageProviders/CustomFrontStageProvider";
 import { CustomBackstageProvider } from "CustomFrontStageProviders/CustomBackstageProvider";
+interface ViewerStartupProps {
+ onIModelAppInit: () => void;
+}
 
-const ViewerStartup: React.FC = () => {
+const ViewerStartup: React.FC<ViewerStartupProps> = (props: ViewerStartupProps) => {
  const { contextId, iModelId, authOptions } = useContext(ViewerContext);
 
  /** NOTE: This function will execute the "Fit View" tool after the iModel is loaded into the Viewer.
@@ -55,6 +58,7 @@ const ViewerStartup: React.FC = () => {
    theme={ColorTheme.Light}
    viewCreatorOptions={{ viewportConfigurer: viewConfiguration }}
    onIModelConnected={onIModelConnected}
+   onIModelAppInit={props.onIModelAppInit}
    uiProviders={[new SmartDeviceUiItemsProvider()]} // We  Need to Register thr Provider to  The  Viewer
    additionalI18nNamespaces={["Widgets"]} // Register localization files on Start
    frontstages={[{ provider: new CustomFrontStageProvider() /*,default: true*/, requiresIModelConnection: true }]} // new Custom FrontStage

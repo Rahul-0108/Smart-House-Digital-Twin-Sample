@@ -12,6 +12,7 @@ import { showToolbar } from "ui-core components/Toolbar";
 const onIModelConnected = async (_imodel: IModelConnection) => {
  // https://www.itwinjs.org/learning/ui/abstract/uiitemsprovider/#uiitemsarbiter
  UiItemsArbiter.uiItemsApplication = new ExampleUiItemsApplication();
+ await ProductSettingsService.Initialize();
 
  registerReducers(); // Register dynamic Reducers
 
@@ -25,7 +26,7 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
   // addOnce : Registers a callback function to be executed only once when the event is raised.
 
   let categoriesToHide = [];
-  const categoriesJsonBag = await ProductSettingsService.Instance().getSharedSetting(
+  const categoriesJsonBag = await ProductSettingsService.getSharedSetting(
    "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
    "iModelCategoriesToHideSettings",
    true,
@@ -50,7 +51,7 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
     "'light fixture'",
     "'Roof'",
    ];
-   await ProductSettingsService.Instance().saveSharedSetting(
+   await ProductSettingsService.saveSharedSetting(
     JSON.stringify(categoriesToHide),
     "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
     "iModelCategoriesToHideSettings",
@@ -72,7 +73,7 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
   vp.changeCategoryDisplay(categoryIds, false); // Enable or disable display of elements belonging to a set of categories specified by Id.
 
   let renderMode: RenderMode | undefined;
-  const renderModeSettings = await ProductSettingsService.Instance().getSetting(
+  const renderModeSettings = await ProductSettingsService.getSetting(
    "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
    "iModelRenderModeSettings",
    true,
@@ -84,7 +85,7 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
    renderMode = Number(renderModeSettings.setting);
   } else {
    renderMode = RenderMode.SmoothShade;
-   await ProductSettingsService.Instance().saveSetting(
+   await ProductSettingsService.saveSetting(
     renderMode.toString(),
     "spa-3ZbQOKSVnH4Zo2sFdzwDlEMPI",
     "iModelRenderModeSettings",

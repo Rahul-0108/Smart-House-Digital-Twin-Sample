@@ -5,19 +5,15 @@ import { SettingsResult, SettingsStatus } from "@bentley/product-settings-client
 //This Product Settings service is a generic way of saving settings information for services in CONNECT.
 //Consumers provide a JSON bag, and we persist it and provide a way to query for it using a namespace/name
 export class ProductSettingsService {
- private static _productSettingsServiceInstance: ProductSettingsService;
  private static _requestContext: AuthorizedClientRequestContext;
 
- public static Instance(accessToen?: AccessToken): ProductSettingsService {
-  if (!ProductSettingsService._productSettingsServiceInstance && accessToen) {
-   ProductSettingsService._requestContext = new AuthorizedClientRequestContext(accessToen);
-   ProductSettingsService._productSettingsServiceInstance = new ProductSettingsService();
-  }
-  return ProductSettingsService._productSettingsServiceInstance;
+ public static async Initialize(): Promise<void> {
+  const accessToken: AccessToken = await IModelApp.authorizationClient?.getAccessToken()!;
+  ProductSettingsService._requestContext = new AuthorizedClientRequestContext(accessToken);
  }
 
  // This Setting is not shared between two different Email Ids even if both of them have access to the same context Id and iModel Id
- public async saveUserSetting(
+ public static async saveUserSetting(
   settings: any,
   namespace: string,
   name: string,
@@ -44,7 +40,7 @@ export class ProductSettingsService {
  }
 
  // This Setting is not shared between two different Email Ids even if both of them have access to the same context Id and iModel Id
- public async getUserSetting(
+ public static async getUserSetting(
   namespace: string,
   name: string,
   applicationSpecific: boolean,
@@ -70,7 +66,7 @@ export class ProductSettingsService {
  }
 
  // // The settings is shared between different Email Ids
- public async saveSetting(
+ public static async saveSetting(
   settings: any,
   namespace: string,
   name: string,
@@ -97,7 +93,7 @@ export class ProductSettingsService {
  }
 
  // The settings is shared between different Email Ids
- public async getSetting(
+ public static async getSetting(
   namespace: string,
   name: string,
   applicationSpecific: boolean,
@@ -123,7 +119,7 @@ export class ProductSettingsService {
  }
 
  // The settings is shared between different Email Ids
- public async saveSharedSetting(
+ public static async saveSharedSetting(
   settings: any,
   namespace: string,
   name: string,
@@ -150,7 +146,7 @@ export class ProductSettingsService {
  }
 
  // The settings is shared between different Email Ids
- public async getSharedSetting(
+ public static async getSharedSetting(
   namespace: string,
   name: string,
   applicationSpecific: boolean,
