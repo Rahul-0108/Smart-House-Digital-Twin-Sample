@@ -27,6 +27,7 @@ import {
  StatusBarItem,
  StatusBarItemUtilities,
  SyncUiEventId,
+ UiFramework,
  WidgetState,
  withStatusFieldProps,
 } from "@bentley/ui-framework";
@@ -68,6 +69,12 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     }, [SyncUiEventId.SelectionSetChanged]), // @bentley/iconsgeneric has a lot of icons, so We will use one from it,We Need to prefix with "icon-"
     "Toggle Walls Tool", // For  ToolTip
     () => {
+     const childWindowId = "popout-widget-1";
+     const title = "Example Popout Widget";
+     const content = <div>Example Popout Widget</div>;
+     const location = { height: 600, width: 400, left: 10, top: 50 };
+     const useDefaultPopoutUrl = false; // this is default if not specified
+     UiFramework.childWindowManager.openChildWindow(childWindowId, title, content, location, true);
      // Action on Click
      this._toggleWalls = !this._toggleWalls;
      this.toggleWallsDisplay();
