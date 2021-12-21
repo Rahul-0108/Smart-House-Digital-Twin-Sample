@@ -60,6 +60,7 @@ export class SmartDeviceMarker extends Marker {
  public onMouseButton(_ev: BeButtonEvent): boolean {
   if (!_ev.isDown) return true;
 
+  // MessageManager.outputMessage(new ReactNotifyMessageDetails(OutputMessagePriority.Info, { reactNode: <div>{"Data"}</div> }));  //  shows  React Element in toast Message
   IModelApp.notifications.outputMessage(
    new NotifyMessageDetails(OutputMessagePriority.Info, "Element " + this._smartDeviceId + " was clicked on")
   );
