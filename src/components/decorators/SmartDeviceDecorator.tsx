@@ -1,4 +1,6 @@
-import { DecorateContext, Decorator, IModelConnection, Marker, ScreenViewport } from "@bentley/imodeljs-frontend";
+import { Point3d } from "@bentley/geometry-core";
+import { ColorDef, LinePixels } from "@bentley/imodeljs-common";
+import { DecorateContext, Decorator, GraphicType, IModelConnection, Marker, ScreenViewport } from "@bentley/imodeljs-frontend";
 import { SmartDeviceMarker } from "components/markers/SmartDeviceMarker";
 
 // Decorator :Interface for drawing [[Decorations]] into, or on top of, the active [[ScreenViewport]]s managed by [[ViewManager]].
@@ -6,6 +8,7 @@ import { SmartDeviceMarker } from "components/markers/SmartDeviceMarker";
 // We will attach  Decorators to  Multiple  Elements
 export class SmartDeviceDecorator implements Decorator {
  private _iModel: IModelConnection;
+ private Data: Point3d[] = [];
  // A Marker is a [[CanvasDecoration]], whose position follows a fixed location in world space. Markers draw on top of all scene graphics,
  // and show visual cues about locations of interest.
  private _markerSet: Marker[]; // For our case , We will be using HTML Element as a Marker
@@ -38,6 +41,7 @@ export class SmartDeviceDecorator implements Decorator {
   const cloudData = await response.json();
 
   values.forEach((value) => {
+   this.Data.push(new Point3d(value.origin.x, value.origin.y, value.origin.z));
    const smartDeviceMarker = new SmartDeviceMarker(
     { x: value.origin.x, y: value.origin.y, z: value.origin.z },
     { x: 40, y: 40 },
@@ -53,6 +57,14 @@ export class SmartDeviceDecorator implements Decorator {
 
  // Implement this method to add [[Decorations]] into the supplied DecorateContext.
  public decorate(context: DecorateContext): void {
+  const overlayBuilder = context.createGraphicBuilder(GraphicType.Scene);
+  const polylineColor = ColorDef.from(24.99, 210.885, 208.08);
+  overlayBuilder.setSymbology(polylineColor, polylineColor, 10, LinePixels.Code3);
+
+  overlayBuilder.addLineString(this.Data);
+
+  context.addDecorationFromBuilder(overlayBuilder);
+
   this._markerSet.forEach((marker) => {
    // Set the position and add this Marker to the supplied DecorateContext, if it's visible. This method should be called from your implementation of
    //  [[Decorator.decorate]]. It will set this Marker's position based on the Viewport from the context, and add this this Marker to the supplied DecorateContext.
