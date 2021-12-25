@@ -22,15 +22,7 @@ import React from "react";
 import CameraView from "./CameraView";
 import { SmartDeviceProperties } from "./SmartDeviceProperties";
 import { SmartDeviceListWidgetComponent } from "./SmartDeviceListWidgetComponent";
-import {
- FooterModeField,
- StatusBarItem,
- StatusBarItemUtilities,
- SyncUiEventId,
- UiFramework,
- WidgetState,
- withStatusFieldProps,
-} from "@bentley/ui-framework";
+import { FooterModeField, StateManager, StatusBarItem, StatusBarItemUtilities, SyncUiEventId, UiFramework, WidgetState, withStatusFieldProps } from "@bentley/ui-framework";
 import { FooterSeparator } from "@bentley/ui-ninezone";
 import { AppActionId } from "Redux/Action";
 
@@ -45,12 +37,7 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
  //Below is the UiItemsProvider function called when ui-framework is populating toolbars. The ToolbarUsage will indicate if the toolbar
  //is on the left (content manipulation) or right (view navigation) of the application window. The ToolbarOrientation specifies if the toolbar
  //is horizontal or vertical.
- public provideToolbarButtonItems(
-  stageId: string,
-  stageUsage: string,
-  toolbarUsage: ToolbarUsage,
-  toolbarOrientation: ToolbarOrientation
- ): CommonToolbarItem[] {
+ public provideToolbarButtonItems(stageId: string, stageUsage: string, toolbarUsage: ToolbarUsage, toolbarOrientation: ToolbarOrientation): CommonToolbarItem[] {
   const toolbarButtonItems: CommonToolbarItem[] = [];
 
   if (
@@ -82,24 +69,26 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
    );
    toolbarButtonItems.push(toggleWallsButton);
 
-   // *********************************GROUP BUTTON DEMO *************************************************
-   const actionButtonTest = ToolbarItemUtilities.createActionButton(
-    "actionButtonTest test",
-    2200,
-    "icon-developer",
-    "ActionButtonTest",
-    (): void => {
-     console.log("Got Here!");
+   const geometryDecoratorShow = ToolbarItemUtilities.createActionButton(
+    "GeometryDecorator",
+    1100, // We want to add out new Tool Button at Bottom , so using itemPriority at maximum
+    "icon-element", // @bentley/iconsgeneric has a lot of icons, so We will use one from it,We Need to prefix with "icon-"
+    "GeometryDecorator", // For  ToolTip
+    () => {
+     IModelApp.viewManager.selectedView?.invalidateDecorations();
+
+     UiFramework.dispatchActionToStore(AppActionId.set_Show_Geometry_Decorator, !StateManager.store.getState().appState.showGeometryDecorator);
     }
    );
-   const groupButton = ToolbarItemUtilities.createGroupButton(
-    "test-tool-group",
-    2400,
-    "icon-developer",
-    "test group",
-    [toggleWallsButton, actionButtonTest],
-    { badgeType: BadgeType.New }
-   );
+   toolbarButtonItems.push(geometryDecoratorShow);
+
+   // *********************************GROUP BUTTON DEMO *************************************************
+   const actionButtonTest = ToolbarItemUtilities.createActionButton("actionButtonTest test", 2200, "icon-developer", "ActionButtonTest", (): void => {
+    console.log("Got Here!");
+   });
+   const groupButton = ToolbarItemUtilities.createGroupButton("test-tool-group", 2400, "icon-developer", "test group", [toggleWallsButton, actionButtonTest], {
+    badgeType: BadgeType.New,
+   });
    toolbarButtonItems.push(groupButton);
    // *********************************GROUP BUTTON DEMO *************************************************
   }
@@ -164,8 +153,8 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
         }}
        />
        <p>
-        Demos changing widgetState and toggle wall icon using consitionalStringValue using SyncEventIds. On selectionchange of
-        elements in viewport the widget state changes and also the toggle wall icon
+        Demos changing widgetState and toggle wall icon using consitionalStringValue using SyncEventIds. On selectionchange of elements in viewport the widget state changes and
+        also the toggle wall icon
        </p>
       </div>
      );

@@ -1,21 +1,15 @@
-import { XAndY, XYAndZ } from "@bentley/geometry-core";
-import {
- BeButtonEvent,
- IModelApp,
- Marker,
- NotifyMessageDetails,
- OutputMessagePriority,
- StandardViewId,
-} from "@bentley/imodeljs-frontend";
+import { Point3d, XAndY, XYAndZ } from "@bentley/geometry-core";
+import { BeButtonEvent, IModelApp, Marker, NotifyMessageDetails, OutputMessagePriority, StandardViewId } from "@bentley/imodeljs-frontend";
 
 export class SmartDeviceMarker extends Marker {
  private _smartDeviceId: string;
+ private _location: Point3d;
  private _smartDeviceType: string;
  private _elementId: string;
 
  constructor(location: XYAndZ, size: XAndY, smartDeviceId: string, smartDeviceType: string, cloudData: any, elementId: string) {
   super(location, size);
-
+  this._location = Point3d.create(location.x, location.y, location.z);
   this._smartDeviceId = smartDeviceId;
   this._smartDeviceType = smartDeviceType;
   this._elementId = elementId;
@@ -43,6 +37,12 @@ export class SmartDeviceMarker extends Marker {
         </tr>
       `;
   }
+  smartTable += `
+  <tr>
+    <th>${"Location"}</th>
+    <th>${this._location.toArray()}</th>
+  </tr>
+`;
 
   const smartTableDiv = document.createElement("div");
   smartTableDiv.className = "smart-table";
@@ -61,9 +61,7 @@ export class SmartDeviceMarker extends Marker {
   if (!_ev.isDown) return true;
 
   // MessageManager.outputMessage(new ReactNotifyMessageDetails(OutputMessagePriority.Info, { reactNode: <div>{"Data"}</div> }));  //  shows  React Element in toast Message
-  IModelApp.notifications.outputMessage(
-   new NotifyMessageDetails(OutputMessagePriority.Info, "Element " + this._smartDeviceId + " was clicked on")
-  );
+  IModelApp.notifications.outputMessage(new NotifyMessageDetails(OutputMessagePriority.Info, "Element " + this._smartDeviceId + " was clicked on"));
   IModelApp.viewManager.selectedView!.zoomToElements(this._elementId, {
    animateFrustumChange: true,
    standardViewId: StandardViewId.RightIso,
