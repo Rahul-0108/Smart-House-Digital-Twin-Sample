@@ -1,16 +1,18 @@
+import { Point3d } from "@bentley/geometry-core";
 import { DeepReadonly, FrameworkState, ReducerRegistryInstance } from "@bentley/ui-framework";
 import { AppActionId, AppActionsUnion } from "./Action";
 
 export interface AppState {
  selectedSmartDeviceElement: any;
  showGeometryDecorator: boolean;
+ pinLocations: Point3d[];
 }
 export interface RootState {
  frameworkState?: FrameworkState;
  appState: AppState;
 }
 
-const initialAppState: AppState = { selectedSmartDeviceElement: undefined, showGeometryDecorator: false };
+const initialAppState: AppState = { selectedSmartDeviceElement: undefined, showGeometryDecorator: false, pinLocations: [] };
 
 export function AppReducer(state: AppState = initialAppState, action: AppActionsUnion): DeepReadonly<AppState> {
  switch (action.type) {
@@ -18,6 +20,8 @@ export function AppReducer(state: AppState = initialAppState, action: AppActions
    return { ...state, selectedSmartDeviceElement: action.payload };
   case AppActionId.set_Show_Geometry_Decorator:
    return { ...state, showGeometryDecorator: action.payload };
+  case AppActionId.set_Pin_Locations:
+   return { ...state, pinLocations: action.payload };
   default:
    return state;
  }

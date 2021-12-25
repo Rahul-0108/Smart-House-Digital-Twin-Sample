@@ -1,5 +1,16 @@
 {
  "camera": {
   "cameraEye": "Camera Eye"
+ },
+ "tools": {
+  "PlacePin": {
+   "keyin": "Place Pin",
+   "flyover": "Place Pin",
+   "description": "Places A New Pin",
+   "prompt1": "Click To Place A Pin",
+   "prompt2": "Right Click to remove a pin",
+   "successStatus": "Pin successfully Placed.",
+   "prompt4": "Two Finger Tap to remove a pin"
+  }
  }
 }

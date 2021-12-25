@@ -1,10 +1,12 @@
 import { DisplayStyleSettingsProps, RenderMode } from "@bentley/imodeljs-common";
 import { IModelApp, IModelConnection, ScreenViewport } from "@bentley/imodeljs-frontend";
 import { UiItemsArbiter } from "@bentley/ui-abstract";
+import { PinDecorator } from "components/decorators/PinDecorator";
 import { SmartDeviceDecorator } from "components/decorators/SmartDeviceDecorator";
 import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
 import { ExampleUiItemsApplication } from "providers/ExampleUiItemsApplication";
 import { registerReducers } from "Redux/Reducer";
+import { PlacePin } from "Tools/PlacePin";
 import { showMenu } from "ui-core components/Menu";
 import { showToolbar } from "ui-core components/Toolbar";
 
@@ -108,6 +110,11 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
   // The process of creating View Decorations starts by adding an object that implements the Decorator interface to the ViewManager via the
   // ViewManager.addDecorator method
   IModelApp.viewManager.addDecorator(new SmartDeviceDecorator(vp));
+
+  PlacePin.namespace = IModelApp.i18n.registerNamespace("Camera");
+  IModelApp.tools.register(PlacePin);
+
+  IModelApp.viewManager.addDecorator(new PinDecorator());
 
   showMenu();
   showToolbar();

@@ -25,6 +25,10 @@ import { SmartDeviceListWidgetComponent } from "./SmartDeviceListWidgetComponent
 import { FooterModeField, StateManager, StatusBarItem, StatusBarItemUtilities, SyncUiEventId, UiFramework, WidgetState, withStatusFieldProps } from "@bentley/ui-framework";
 import { FooterSeparator } from "@bentley/ui-ninezone";
 import { AppActionId } from "Redux/Action";
+import { AppState } from "Redux/Reducer";
+import { Point3d } from "@bentley/geometry-core";
+import { MarkerPinsListWidget } from "./MarkerPinsListWidget";
+import { PlacePin } from "Tools/PlacePin";
 
 export class SmartDeviceUiItemsProvider implements UiItemsProvider {
  public readonly id = "SmartDeviceUiProvider";
@@ -81,6 +85,21 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     }
    );
    toolbarButtonItems.push(geometryDecoratorShow);
+
+   const PlacementMarker = ToolbarItemUtilities.createActionButton(
+    "Placement Marker",
+    1200, // We want to add out new Tool Button at Bottom , so using itemPriority at maximum
+    "icon-map", // @bentley/iconsgeneric has a lot of icons, so We will use one from it,We Need to prefix with "icon-"  https://unpkg.com/@bentley/icons-generic-webfont@1.0.34/dist/bentley-icons-generic-webfont.html
+    "Placement Marker", // For  ToolTip
+    () => {
+     IModelApp.tools.run(
+      PlacePin.toolId,
+      () => (StateManager.store.getState().appState as AppState).pinLocations,
+      (pins: Point3d[]) => UiFramework.dispatchActionToStore(AppActionId.set_Pin_Locations, pins)
+     );
+    }
+   );
+   toolbarButtonItems.push(PlacementMarker);
 
    // *********************************GROUP BUTTON DEMO *************************************************
    const actionButtonTest = ToolbarItemUtilities.createActionButton("actionButtonTest test", 2200, "icon-developer", "ActionButtonTest", (): void => {
@@ -171,6 +190,17 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     },
    };
 
+   const markersWidget: AbstractWidgetProps = {
+    id: "markersWidget",
+    label: "Markers Widget",
+    getWidgetContent: () => <MarkerPinsListWidget></MarkerPinsListWidget>,
+    syncEventIds: [AppActionId.set_Pin_Locations], // Defines the SyncUi event Ids that will trigger the stateFunc to run to determine the state of the widget.
+    stateFunc: (state: Readonly<WidgetState>) => {
+     // Function executed to determine the state of the widget
+     return WidgetState.Open;
+    },
+   };
+
    const widget: AbstractWidgetProps = {
     id: "smartDeviceListWidget", // We should define id to Correctly Save and Restore App Layout
     label: IModelApp.i18n.translate("Widgets:widgets.smartDevices"), // Header of Widget
@@ -191,6 +221,7 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
    };
 
    widgets.push(backgroundColorWidget);
+   widgets.push(markersWidget);
    widgets.push(widget);
    widgets.push(propertiesWidget);
   } else if (stageId === "DefaultFrontstage" && location === StagePanelLocation.Right && section === StagePanelSection.End) {
