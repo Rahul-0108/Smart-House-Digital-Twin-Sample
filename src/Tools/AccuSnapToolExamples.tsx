@@ -121,6 +121,10 @@ export class CreateByPointsTool extends PrimitiveTool {
   hints.sendHints();
  }
 
+ public isCompatibleViewport(vp: Viewport) {
+  return undefined !== vp && vp.view.isSpatialView();
+ }
+
  public onDynamicFrame(ev: BeButtonEvent, context: DynamicsContext): void {
   if (this.points.length < 1) return;
 
