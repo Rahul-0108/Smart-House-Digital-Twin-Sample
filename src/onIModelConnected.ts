@@ -6,7 +6,10 @@ import { SmartDeviceDecorator } from "components/decorators/SmartDeviceDecorator
 import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
 import { ExampleUiItemsApplication } from "providers/ExampleUiItemsApplication";
 import { registerReducers } from "Redux/Reducer";
+import { SampleLocateTool } from "Tools/AccuSnapToolExamples";
+import { LineStringDrawTool } from "Tools/LineStringDrawTool";
 import { PlacePin } from "Tools/PlacePin";
+import { WalkPathTool } from "Tools/WalkPathTool";
 import { showMenu } from "ui-core components/Menu";
 import { showToolbar } from "ui-core components/Toolbar";
 
@@ -111,8 +114,14 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
   // ViewManager.addDecorator method
   IModelApp.viewManager.addDecorator(new SmartDeviceDecorator(vp));
 
-  PlacePin.namespace = IModelApp.i18n.registerNamespace("Camera");
-  IModelApp.tools.register(PlacePin);
+  WalkPathTool.namespace = IModelApp.i18n.registerNamespace("Camera");
+  IModelApp.tools.register(WalkPathTool);
+
+  LineStringDrawTool.namespace = IModelApp.i18n.registerNamespace("Camera");
+  IModelApp.tools.register(LineStringDrawTool);
+
+  SampleLocateTool.namespace = IModelApp.i18n.registerNamespace("Camera");
+  IModelApp.tools.register(SampleLocateTool);
 
   IModelApp.viewManager.addDecorator(new PinDecorator());
 

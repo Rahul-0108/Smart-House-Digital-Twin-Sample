@@ -14,6 +14,7 @@ import {
  LocateFilterStatus,
  LocateResponse,
  PrimitiveTool,
+ Viewport,
 } from "@bentley/imodeljs-frontend";
 
 export class SampleSnapTool extends PrimitiveTool {
@@ -57,18 +58,38 @@ export class SampleLocateTool extends PrimitiveTool {
  public async onRestartTool() {
   return this.exitTool();
  }
+ isCompatibleViewport(vp: Viewport) {
+  return undefined !== vp && vp.view.isSpatialView();
+ }
 
- // __PUBLISH_EXTRACT_START__ PrimitiveTool_Locate
+ /** Invoked to allow tools to filter which elements can be located.
+  * @return Reject if hit is unacceptable for this tool (fill out response with explanation, if it is defined)
+  */
+
+ /** A HitDetail stores the result when locating geometry displayed in a view.
+  * It holds an approximate location on an element (or decoration) from a *pick*.*/
+ // will be Always called on the Mouse is over an Element
  public async filterHit(hit: HitDetail, _out?: LocateResponse): Promise<LocateFilterStatus> {
   // Check that element is valid for the tool operation, ex. query backend to test class, etc.
   // For this example we'll just test the element's selected status.
-  const isSelected = this.iModel.selectionSet.has(hit.sourceId);
+  const isSelected = IModelApp.viewManager.selectedView?.iModel.selectionSet.has(hit.sourceId);
+
+  // we will reject this selected element, so we are setting explanation to be provided as tooltip
+  if (isSelected && _out) {
+   _out.explanation = `This Particular ${hit.sourceId} is not valid for this Particular tool operation`;
+  }
   return isSelected ? LocateFilterStatus.Reject : LocateFilterStatus.Accept; // Reject element that is already selected
  }
 
+ //Will be Always called for Accepted  Elements on  Hover, if this method is not defined then the default element locate tooltip will be provided on
+ public async getToolTip(_hit: HitDetail): Promise<string | HTMLElement> {
+  return `Accepted Element: ${_hit.sourceId}`;
+ }
+
  public async onDataButtonDown(ev: BeButtonEvent): Promise<EventHandled> {
-  const hit = await IModelApp.locateManager.doLocate(new LocateResponse(), true, ev.point, ev.viewport, ev.inputSource);
-  if (hit !== undefined) this.iModel.selectionSet.replace(hit.sourceId); // Replace current selection set with accepted element
+  //On Hover,if FilterHit returns  Accepted,then onClick doLocate here will return Value;if FilterHit returns  rejected,then onClick doLocate here will return undefined
+  const hit: HitDetail | undefined = await IModelApp.locateManager.doLocate(new LocateResponse(), true, ev.point, ev.viewport, ev.inputSource);
+  if (hit !== undefined) IModelApp.viewManager.selectedView?.iModel.selectionSet.replace(hit.sourceId); // Replace current selection set with accepted element
 
   return EventHandled.No;
  }
@@ -77,7 +98,6 @@ export class SampleLocateTool extends PrimitiveTool {
   await super.onPostInstall();
   this.initLocateElements(); // Enable AccuSnap locate, set view cursor, add CoordinateLockOverrides to disable unwanted pre-locate point adjustments...
  }
- // __PUBLISH_EXTRACT_END__
 }
 
 export class CreateByPointsTool extends PrimitiveTool {

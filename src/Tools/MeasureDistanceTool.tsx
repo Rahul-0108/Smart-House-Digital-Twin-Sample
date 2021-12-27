@@ -1,4 +1,24 @@
-import { PrimitiveTool } from "@bentley/imodeljs-frontend";
+import { Matrix3d, Point2d, Point3d, Vector3d, XAndY, XYAndZ } from "@bentley/geometry-core";
+import {
+ BeButtonEvent,
+ CoreTools,
+ DecorateContext,
+ EventHandled,
+ IModelApp,
+ InputSource,
+ Marker,
+ NotifyMessageDetails,
+ OutputMessagePriority,
+ OutputMessageType,
+ PrimitiveTool,
+ QuantityType,
+ ToolAssistance,
+ ToolAssistanceImage,
+ ToolAssistanceInputMethod,
+ ToolAssistanceInstruction,
+ ToolAssistanceSection,
+ Viewport,
+} from "@bentley/imodeljs-frontend";
 
 // export class MeasureDistanceTool extends PrimitiveTool {
 //  public static override toolId = "Measure.Distance";
@@ -602,3 +622,256 @@ import { PrimitiveTool } from "@bentley/imodeljs-frontend";
 //   if (!(await tool.run())) return this.exitTool();
 //  }
 // }
+
+export class MeasureLocationTool extends PrimitiveTool {
+ public static override toolId = "Measure.Location";
+ public static override iconSpec = "icon-measure-location";
+ /** @internal */
+ protected readonly _acceptedLocations: MeasureMarker[] = [];
+ /** @internal */
+ protected allowView(vp: Viewport) {
+  return vp.view.isSpatialView() || vp.view.isDrawingView();
+ }
+ /** @internal */
+ public override isCompatibleViewport(vp: Viewport | undefined, isSelectedViewChange: boolean): boolean {
+  return super.isCompatibleViewport(vp, isSelectedViewChange) && undefined !== vp && this.allowView(vp);
+ }
+ /** @internal */
+ public override isValidLocation(_ev: BeButtonEvent, _isButtonEvent: boolean): boolean {
+  return true;
+ }
+ /** @internal */
+ public override requireWriteableTarget(): boolean {
+  return false;
+ }
+ /** @internal */
+ public override async onPostInstall() {
+  await super.onPostInstall();
+  this.setupAndPromptForNextAction();
+ }
+ /** @internal */
+ public override async onUnsuspend() {
+  this.showPrompt();
+ }
+
+ /** @internal */
+ protected showPrompt(): void {
+  const mainInstruction = ToolAssistance.createInstruction(this.iconSpec, CoreTools.translate("Measure.Location.Prompts.EnterPoint"));
+  const mouseInstructions: ToolAssistanceInstruction[] = [];
+  const touchInstructions: ToolAssistanceInstruction[] = [];
+
+  if (!ToolAssistance.createTouchCursorInstructions(touchInstructions))
+   touchInstructions.push(
+    ToolAssistance.createInstruction(ToolAssistanceImage.OneTouchTap, CoreTools.translate("ElementSet.Inputs.AcceptPoint"), false, ToolAssistanceInputMethod.Touch)
+   );
+  mouseInstructions.push(
+   ToolAssistance.createInstruction(ToolAssistanceImage.LeftClick, CoreTools.translate("ElementSet.Inputs.AcceptPoint"), false, ToolAssistanceInputMethod.Mouse)
+  );
+  if (0 !== this._acceptedLocations.length) {
+   touchInstructions.push(
+    ToolAssistance.createInstruction(ToolAssistanceImage.TwoTouchTap, CoreTools.translate("ElementSet.Inputs.Restart"), false, ToolAssistanceInputMethod.Touch)
+   );
+   mouseInstructions.push(
+    ToolAssistance.createInstruction(ToolAssistanceImage.RightClick, CoreTools.translate("ElementSet.Inputs.Restart"), false, ToolAssistanceInputMethod.Mouse)
+   );
+  }
+
+  const sections: ToolAssistanceSection[] = [];
+  sections.push(ToolAssistance.createSection(mouseInstructions, ToolAssistance.inputsLabel));
+  sections.push(ToolAssistance.createSection(touchInstructions, ToolAssistance.inputsLabel));
+
+  const instructions = ToolAssistance.createInstructions(mainInstruction, sections);
+  IModelApp.notifications.setToolAssistance(instructions);
+ }
+
+ /** @internal */
+ protected setupAndPromptForNextAction(): void {
+  IModelApp.accuSnap.enableSnap(true);
+  this.showPrompt();
+ }
+
+ protected async getMarkerToolTip(point: Point3d): Promise<HTMLElement> {
+  const is3d = undefined === this.targetView || this.targetView.view.is3d();
+  const isSpatial = undefined !== this.targetView && this.targetView.view.isSpatialView();
+  const toolTip = document.createElement("div");
+
+  let toolTipHtml = "";
+  const coordFormatterSpec = await IModelApp.quantityFormatter.getFormatterSpecByQuantityType(QuantityType.Coordinate);
+  if (undefined !== coordFormatterSpec) {
+   let pointAdjusted = point;
+   if (isSpatial) {
+    const globalOrigin = this.iModel.globalOrigin;
+    pointAdjusted = pointAdjusted.minus(globalOrigin);
+   }
+   const formattedPointX = IModelApp.quantityFormatter.formatQuantity(pointAdjusted.x, coordFormatterSpec);
+   const formattedPointY = IModelApp.quantityFormatter.formatQuantity(pointAdjusted.y, coordFormatterSpec);
+   const formattedPointZ = IModelApp.quantityFormatter.formatQuantity(pointAdjusted.z, coordFormatterSpec);
+   toolTipHtml += `${"Coordinate" + formattedPointX}, ${formattedPointY}`;
+   if (is3d) toolTipHtml += `, ${formattedPointZ}`;
+
+   toolTipHtml += "<br>";
+  }
+
+  if (isSpatial) {
+   const latLongFormatterSpec = await IModelApp.quantityFormatter.getFormatterSpecByQuantityType(QuantityType.LatLong);
+   if (undefined !== latLongFormatterSpec && undefined !== coordFormatterSpec) {
+    try {
+     const cartographic = await this.iModel.spatialToCartographic(point);
+     const formattedLat = IModelApp.quantityFormatter.formatQuantity(Math.abs(cartographic.latitude), latLongFormatterSpec);
+     const formattedLong = IModelApp.quantityFormatter.formatQuantity(Math.abs(cartographic.longitude), latLongFormatterSpec);
+     const formattedHeight = IModelApp.quantityFormatter.formatQuantity(cartographic.height, coordFormatterSpec);
+     const latDir = CoreTools.translate(cartographic.latitude < 0 ? "Measure.Labels.S" : "Measure.Labels.N");
+     const longDir = CoreTools.translate(cartographic.longitude < 0 ? "Measure.Labels.W" : "Measure.Labels.E");
+     toolTipHtml += `${"LatLong" + formattedLat + latDir}, ${formattedLong}${longDir}<br>`;
+     toolTipHtml += `${"Altitude" + formattedHeight}<br>`;
+    } catch {}
+   }
+  }
+
+  toolTip.innerHTML = toolTipHtml;
+  return toolTip;
+ }
+
+ /** @internal */
+ public override decorate(context: DecorateContext): void {
+  if (!this.isCompatibleViewport(context.viewport, false)) return;
+  this._acceptedLocations.forEach((marker) => marker.addDecoration(context));
+ }
+ /** @internal */
+ public override decorateSuspended(context: DecorateContext): void {
+  this.decorate(context);
+ }
+
+ protected reportMeasurements(): void {
+  if (0 === this._acceptedLocations.length) return;
+  const briefMsg = this._acceptedLocations[this._acceptedLocations.length - 1].title;
+  if (undefined === briefMsg) return;
+  const msgDetail = new NotifyMessageDetails(OutputMessagePriority.Info, briefMsg, undefined, OutputMessageType.Sticky);
+  IModelApp.notifications.outputMessage(msgDetail);
+ }
+
+ /** @internal */
+ public override async onDataButtonDown(ev: BeButtonEvent): Promise<EventHandled> {
+  const point = ev.point.clone();
+  const adjustedPoint = adjustPoint(ev);
+  const toolTip = await this.getMarkerToolTip(adjustedPoint);
+  const marker = new MeasureMarker((this._acceptedLocations.length + 1).toString(), toolTip, point, Point2d.create(25, 25));
+
+  this._acceptedLocations.push(marker);
+  this.reportMeasurements();
+  this.setupAndPromptForNextAction();
+  if (undefined !== ev.viewport) ev.viewport.invalidateDecorations();
+  return EventHandled.No;
+ }
+
+ /** @internal */
+ public override async onResetButtonUp(_ev: BeButtonEvent): Promise<EventHandled> {
+  await this.onReinitialize();
+  return EventHandled.No;
+ }
+
+ /** @internal */
+ public override async onUndoPreviousStep(): Promise<boolean> {
+  if (0 === this._acceptedLocations.length) return false;
+
+  this._acceptedLocations.pop();
+  if (0 === this._acceptedLocations.length) {
+   await this.onReinitialize();
+  } else {
+   this.reportMeasurements();
+   this.setupAndPromptForNextAction();
+  }
+  return true;
+ }
+
+ /** @internal */
+ public async onRestartTool(): Promise<void> {
+  const tool = new MeasureLocationTool();
+  if (!(await tool.run())) return this.exitTool();
+ }
+}
+
+class MeasureMarker extends Marker {
+ public isSelected: boolean = false;
+ constructor(label: string, title: HTMLElement, worldLocation: XYAndZ, size: XAndY) {
+  super(worldLocation, size);
+
+  const markerDrawFunc = (ctx: CanvasRenderingContext2D) => {
+   ctx.beginPath();
+   ctx.arc(0, 0, this.size.x * 0.5, 0, 2 * Math.PI);
+   ctx.lineWidth = 2;
+   ctx.strokeStyle = "black";
+   const hilite = this.isSelected && this._hiliteColor ? this._hiliteColor.colors : undefined;
+   ctx.fillStyle = undefined !== hilite ? `rgba(${hilite.r | 0},${hilite.g | 0},${hilite.b | 0}, 0.5)` : "rgba(255,255,255,.5)";
+   ctx.fill();
+   ctx.stroke();
+  };
+
+  this.drawFunc = markerDrawFunc; // eslint-disable-line @typescript-eslint/unbound-method
+  this.title = title;
+  this.label = label;
+  this.labelFont = "16px sans-serif";
+  this.labelColor = "black";
+  this.labelMaxWidth = this.size.x * 0.75;
+  this.labelOffset = { x: 0, y: -1 };
+ }
+
+ public override onMouseButton(_ev: BeButtonEvent): boolean {
+  return true;
+ } // Never forward event to active tool...
+
+ public override onMouseEnter(ev: BeButtonEvent) {
+  super.onMouseEnter(ev);
+  if (this.title && InputSource.Touch === ev.inputSource && ev.viewport) ev.viewport.openToolTip(this.title, ev.viewPoint, this.tooltipOptions);
+ }
+
+ public override onMouseLeave() {
+  super.onMouseLeave();
+  if (this.title) IModelApp.notifications.clearToolTip(); // Clear tool tip from tap since we won't get a motion event...
+ }
+}
+
+function adjustPoint(ev: BeButtonEvent, segments?: Array<Segment>, locations?: Array<Location>): Point3d {
+ // If the point was from a hit we must transform it by the model display transform of what got hit.
+ if (undefined === ev.viewport || undefined === ev.viewport.view.modelDisplayTransformProvider) return ev.point;
+ if (undefined !== IModelApp.accuSnap.currHit && undefined !== IModelApp.accuSnap.currHit.modelId) {
+  if ("0" !== IModelApp.accuSnap.currHit.modelId) {
+   const newPoint = ev.point.clone();
+   ev.viewport.view.transformPointByModelDisplayTransform(IModelApp.accuSnap.currHit.modelId, newPoint, true);
+   return newPoint;
+  } else {
+   // Must have snapped to a decoration, so look through previous any segments & locations for a match to get an adjusted point.
+   if (undefined !== segments) {
+    for (const seg of segments) {
+     if (seg.start.isExactEqual(ev.point)) return seg.adjustedStart.clone();
+     if (seg.end.isExactEqual(ev.point)) return seg.adjustedEnd.clone();
+    }
+   }
+   if (undefined !== locations) {
+    for (const loc of locations) {
+     if (loc.point.isExactEqual(ev.point)) return loc.adjustedPoint.clone();
+    }
+   }
+  }
+ }
+ return ev.point;
+}
+
+interface Segment {
+ distance: number;
+ slope: number;
+ start: Point3d;
+ end: Point3d;
+ delta: Vector3d;
+ adjustedStart: Point3d;
+ adjustedEnd: Point3d;
+ adjustedDelta: Vector3d;
+ refAxes: Matrix3d;
+ marker: MeasureMarker;
+}
+
+interface Location {
+ point: Point3d;
+ adjustedPoint: Point3d;
+ refAxes: Matrix3d;
+}

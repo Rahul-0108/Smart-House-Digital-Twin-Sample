@@ -29,6 +29,8 @@ import { AppState } from "Redux/Reducer";
 import { Point3d } from "@bentley/geometry-core";
 import { MarkerPinsListWidget } from "./MarkerPinsListWidget";
 import { PlacePin } from "Tools/PlacePin";
+import { LineStringDrawTool } from "Tools/LineStringDrawTool";
+import { SampleLocateTool } from "Tools/AccuSnapToolExamples";
 
 export class SmartDeviceUiItemsProvider implements UiItemsProvider {
  public readonly id = "SmartDeviceUiProvider";
@@ -100,6 +102,26 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     }
    );
    toolbarButtonItems.push(PlacementMarker);
+
+   const drawLineStringToolButton = ToolbarItemUtilities.createActionButton(
+    "DrawLineStringTool",
+    1400, // We want to add out new Tool Button at Bottom , so using itemPriority at maximum
+    "icon-draw", // @bentley/iconsgeneric has a lot of icons, so We will use one from it,We Need to prefix with "icon-"  https://unpkg.com/@bentley/icons-generic-webfont@1.0.34/dist/bentley-icons-generic-webfont.html
+    "Draw LineString Tool", // For  ToolTip
+    () => IModelApp.tools.run(LineStringDrawTool.toolId)
+   );
+
+   toolbarButtonItems.push(drawLineStringToolButton);
+
+   const sampleLocateToolButton = ToolbarItemUtilities.createActionButton(
+    "SampleLocateToolButton",
+    1400, // We want to add out new Tool Button at Bottom , so using itemPriority at maximum
+    "icon-select-plus", // @bentley/iconsgeneric has a lot of icons, so We will use one from it,We Need to prefix with "icon-"  https://unpkg.com/@bentley/icons-generic-webfont@1.0.34/dist/bentley-icons-generic-webfont.html
+    "Sample Locate Tool", // For  ToolTip
+    () => IModelApp.tools.run(SampleLocateTool.toolId)
+   );
+
+   toolbarButtonItems.push(sampleLocateToolButton);
 
    // *********************************GROUP BUTTON DEMO *************************************************
    const actionButtonTest = ToolbarItemUtilities.createActionButton("actionButtonTest test", 2200, "icon-developer", "ActionButtonTest", (): void => {
