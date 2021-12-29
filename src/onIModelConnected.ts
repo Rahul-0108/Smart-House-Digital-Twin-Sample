@@ -1,5 +1,5 @@
 import { DisplayStyleSettingsProps, RenderMode } from "@bentley/imodeljs-common";
-import { IModelApp, IModelConnection, ScreenViewport } from "@bentley/imodeljs-frontend";
+import { IModelApp, IModelConnection, LocalUnitFormatProvider, OverrideFormatEntry, QuantityType, ScreenViewport } from "@bentley/imodeljs-frontend";
 import { UiItemsArbiter } from "@bentley/ui-abstract";
 import { PinDecorator } from "components/decorators/PinDecorator";
 import { SmartDeviceDecorator } from "components/decorators/SmartDeviceDecorator";
@@ -8,6 +8,7 @@ import { ExampleUiItemsApplication } from "providers/ExampleUiItemsApplication";
 import { registerReducers } from "Redux/Reducer";
 import { SampleLocateTool } from "Tools/AccuSnapToolExamples";
 import { LineStringDrawTool } from "Tools/LineStringDrawTool";
+import { PlacementTool } from "Tools/PlacementTool";
 import { PlacePin } from "Tools/PlacePin";
 import { WalkPathTool } from "Tools/WalkPathTool";
 import { showMenu } from "ui-core components/Menu";
@@ -23,6 +24,27 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
 
  const registeredNamespace = IModelApp.i18n.registerNamespace("Camera"); // To show how to register a namespace
  await registeredNamespace.readFinished;
+
+ await IModelApp.quantityFormatter.setActiveUnitSystem("metric");
+
+ const overrideLengthFormats: OverrideFormatEntry = {
+  metric: {
+   composite: {
+    includeZero: true,
+    spacer: " ",
+    units: [{ label: "mm", name: "Units.MM" }],
+   },
+   formatTraits: ["keepSingleZero", "showUnitLabel", "use1000Separator"],
+   thousandSeparator: ",",
+   precision: 2,
+   type: "Decimal",
+  },
+ };
+
+ await IModelApp.quantityFormatter.setOverrideFormats(QuantityType.Length, overrideLengthFormats);
+ await IModelApp.quantityFormatter.setUnitFormattingSettingsProvider(new LocalUnitFormatProvider(IModelApp.quantityFormatter, true));
+
+ const formatPropsByQuantityType = IModelApp.quantityFormatter.getFormatPropsByQuantityType(QuantityType.Length, "metric", false);
 
  // ImodelApp : Global singleton that connects the user interface with the iModel.js services. There can be only one IModelApp active in a session.
  // All members of IModelApp are static, and it serves as a singleton object for gaining access to session information.
@@ -116,6 +138,9 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
 
   WalkPathTool.namespace = IModelApp.i18n.registerNamespace("Camera");
   IModelApp.tools.register(WalkPathTool);
+
+  PlacePin.namespace = IModelApp.i18n.registerNamespace("Camera");
+  IModelApp.tools.register(PlacePin);
 
   LineStringDrawTool.namespace = IModelApp.i18n.registerNamespace("Camera");
   IModelApp.tools.register(LineStringDrawTool);
