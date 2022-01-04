@@ -9,8 +9,15 @@ import ReactDOM from "react-dom";
 
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+import ExampleBlankViewer from "Blank Viewer/BlankViewer";
 
-ReactDOM.render(<App />, document.getElementById("root"));
+const isItwinViewer = true;
+
+if (isItwinViewer) {
+ ReactDOM.render(<App />, document.getElementById("root"));
+} else {
+ ReactDOM.render(<ExampleBlankViewer />, document.getElementById("root"));
+}
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

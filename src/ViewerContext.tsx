@@ -6,8 +6,8 @@ import { WebAuthorizationOptions } from "@itwin/web-viewer-react";
 import React from "react";
 
 export interface ViewerContext {
- contextId: string;
- iModelId: string;
+ contextId?: string;
+ iModelId?: string;
  authOptions: WebAuthorizationOptions;
 }
 export const defaultContext: ViewerContext = {
