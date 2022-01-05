@@ -1,13 +1,15 @@
-import { CurveCollection, CurvePrimitive, Point3d } from "@bentley/geometry-core";
-import { ColorDef } from "@bentley/imodeljs-common";
+import { CurveCollection, CurvePrimitive, IndexedPolyface, Point3d, PolyfaceBuilder, StrokeOptions } from "@bentley/geometry-core";
+import { ColorByName, ColorDef } from "@bentley/imodeljs-common";
 import { IModelApp } from "@bentley/imodeljs-frontend";
 import { Value } from "@bentley/presentation-common";
 import { AbstractWidgetProps, AbstractZoneLocation, StagePanelLocation, StagePanelSection, UiItemsProvider } from "@bentley/ui-abstract";
 import { Button, NumberInput } from "@bentley/ui-core";
 import React from "react";
+import { createAdvancedShapes3d } from "./AdvancedShapes3d";
 import { DrawMarker } from "./DrawMarker";
 import { GeometryDecorator } from "./GeometryDecorator";
 import { fracToPointAndDerivativeVisualization } from "./OnIModelAppInit";
+import Shapes3d, { createShapes3d } from "./Shapes3d";
 
 export class GeometryDecoratorUiItemsProvider implements UiItemsProvider {
  public readonly id = "GeometryDecoratorUiItemsProvider";
@@ -39,6 +41,22 @@ export class GeometryDecoratorUiItemsProvider implements UiItemsProvider {
        <NumberInputComponent></NumberInputComponent>
        {/* {"FractionToPointAndDerivative"}
        <FractionToPointAndDerivativeComponent></FractionToPointAndDerivativeComponent> */}
+
+       <Button
+        onClick={() => {
+         createShapes3d();
+        }}
+       >
+        {"Shapes"}
+       </Button>
+
+       <Button
+        onClick={() => {
+         createAdvancedShapes3d();
+        }}
+       >
+        {"Advanced Shapes"}
+       </Button>
       </div>
      );
     },

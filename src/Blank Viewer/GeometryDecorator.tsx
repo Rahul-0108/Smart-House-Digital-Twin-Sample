@@ -12,7 +12,7 @@ import {
  Transform,
 } from "@bentley/geometry-core";
 import { DecorateContext, Decorator, GraphicBranch, GraphicBuilder, GraphicType, IModelApp, Marker, RenderGraphic } from "@bentley/imodeljs-frontend";
-import { ColorDef, LinePixels, TextString, ViewFlagOverrides } from "@bentley/imodeljs-common";
+import { ColorByName, ColorDef, LinePixels, TextString, ViewFlagOverrides } from "@bentley/imodeljs-common";
 
 // Since all geometry is rendered concurrently, when adding geometry, we attach their desired attributes to them in an object
 interface CustomGeometryQuery {
@@ -245,18 +245,27 @@ export class GeometryDecorator implements Decorator {
     // Since decorators don't natively support visual edges,
     // We draw them manually as lines along each facet edge
     builder.setSymbology(ColorDef.black, ColorDef.black, 2);
-    const visitor = IndexedPolyfaceVisitor.create(geometry, 1);
+    // An IndexedPolyfaceVisitor is an iterator-like object that "visits" facets of a mesh.
+    // The visitor extends a PolyfaceData class, so it can at any time hold all the data of a single facet.
+
+    /** Create a visitor for iterating the facets of `polyface`, with indicated number of points to be added to each facet to produce closed point arrays
+     * Typical wrap counts are:
+     * * 0 -- leave the point arrays with "missing final edge"
+     * * 1 -- add point 0 as closure point
+     * * 2 -- add points 0 and 1 as closure and wrap point.  This is useful when vertex visit requires two adjacent vectors, e.g. for cross products.
+     */
+    const visitor: IndexedPolyfaceVisitor = IndexedPolyfaceVisitor.create(geometry, 0);
     let flag = true;
     while (flag) {
-     const numIndices = visitor.pointCount;
+     const numIndices: number = visitor.pointCount; // Get the point count
      for (let i = 0; i < numIndices - 1; i++) {
-      const point1 = visitor.getPoint(i);
+      const point1 = visitor.getPoint(i); // return indexed point. This is a copy of the coordinates, not a reference.
       const point2 = visitor.getPoint(i + 1);
       if (point1 && point2) {
        builder.addLineString([point1, point2]);
       }
      }
-     flag = visitor.moveToNextFacet();
+     flag = visitor.moveToNextFacet(); // Advance the iterator to a the 'next' facet in the client polyface
     }
    }
   } else if (geometry instanceof LineSegment3d) {
@@ -310,7 +319,7 @@ export class GeometryDecorator implements Decorator {
  }
 
  // Draws a base for the 3d geometry
- public drawBase(origin: Point3d = new Point3d(0, 0, 0), width: number = 20, length: number = 20) {
+ public drawBase(origin: Point3d = new Point3d(0, 0, 0), width: number = 80, length: number = 80) {
   const oldEdges = this.edges;
   const oldColor = this.color;
   this.edges = false;
@@ -321,7 +330,7 @@ export class GeometryDecorator implements Decorator {
   points.push(Point3d.create(origin.x + width / 2, origin.y - length / 2, origin.z - 0.05));
   const linestring = LineString3d.create(points);
   const loop = Loop.create(linestring.clone());
-  this.setColor(ColorDef.fromTbgr(ColorDef.withTransparency(ColorDef.green.tbgr, 150)));
+  this.setFillColor(ColorDef.fromTbgr(ColorDef.withTransparency(ColorDef.create(ColorByName.lightBlue).tbgr, 150)));
   this.addGeometry(loop);
   this.color = oldColor;
   this.edges = oldEdges;
