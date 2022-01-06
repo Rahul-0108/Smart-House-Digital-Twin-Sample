@@ -10,6 +10,10 @@ import ReactDOM from "react-dom";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import ExampleBlankViewer from "Blank Viewer/BlankViewer";
+import { Logging } from "Logging/Logging";
+
+// Setup logging immediately in the App , iTwinViewer does not initializes logging , so We must do it
+Logging.Initialize();
 
 const isItwinViewer = true;
 

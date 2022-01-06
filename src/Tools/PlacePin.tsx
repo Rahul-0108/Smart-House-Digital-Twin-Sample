@@ -1,6 +1,8 @@
+import { Logger } from "@bentley/bentleyjs-core";
 import { Point3d } from "@bentley/geometry-core";
 import { BeButtonEvent, EventHandled, IModelApp, PrimitiveTool, ToolAssistance, ToolAssistanceImage, ToolAssistanceInputMethod } from "@bentley/imodeljs-frontend";
 import { PinDecorator, PinMarker } from "components/decorators/PinDecorator";
+import { LoggingCategory } from "Logging/Logging";
 
 export class PlacePin extends PrimitiveTool {
  public static readonly toolId = "PlacePin";
@@ -11,6 +13,7 @@ export class PlacePin extends PrimitiveTool {
  private _getPins!: () => Point3d[];
 
  public async onDataButtonDown(ev: BeButtonEvent) {
+  Logger.logInfo(LoggingCategory.PlacePinTool, "Placing Pin", () => "Method name: onDataButtonDown");
   const nextPins = [...this._getPins(), ev.point];
   this._setPins(nextPins);
   PinDecorator.pins = nextPins.map((p) => new PinMarker(p));
