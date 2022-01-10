@@ -1,9 +1,11 @@
 import { DisplayStyleSettingsProps, RenderMode } from "@bentley/imodeljs-common";
 import { IModelApp, IModelConnection, LocalUnitFormatProvider, OverrideFormatEntry, QuantityType, ScreenViewport } from "@bentley/imodeljs-frontend";
 import { UiItemsArbiter } from "@bentley/ui-abstract";
+import { CategoriesQueriesRpcInterface } from "common/Rpc";
 import { PinDecorator } from "components/decorators/PinDecorator";
 import { SmartDeviceDecorator } from "components/decorators/SmartDeviceDecorator";
 import { ProductSettingsService } from "iTwin Cloud Services/ProductSettingsService";
+import { ITwinHelper } from "ITwinHelper";
 import { ExampleUiItemsApplication } from "providers/ExampleUiItemsApplication";
 import { registerReducers } from "Redux/Reducer";
 import { SampleLocateTool } from "Tools/AccuSnapToolExamples";
@@ -88,13 +90,19 @@ const onIModelConnected = async (_imodel: IModelConnection) => {
    );
   }
 
-  const query = `SELECT ECInstanceId FROM Bis.Category 
+  let categoryIds = [];
+
+  if (ITwinHelper.isCustomBackend) {
+   categoryIds = await CategoriesQueriesRpcInterface.getClient().getCategoriesECInstanceIds(vp.iModel.getRpcProps(), categoriesToHide);
+  } else {
+   const query = `SELECT ECInstanceId FROM Bis.Category 
       WHERE CodeValue IN (${categoriesToHide.toString()})`;
 
-  const result = vp.iModel.query(query);
-  let categoryIds = [];
-  for await (const row of result) {
-   categoryIds.push(row.id);
+   const result = vp.iModel.query(query);
+
+   for await (const row of result) {
+    categoryIds.push(row.id);
+   }
   }
   // we want to hide elements which we do not want to display
   vp.changeCategoryDisplay(categoryIds, false); // Enable or disable display of elements belonging to a set of categories specified by Id.

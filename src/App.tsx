@@ -5,7 +5,7 @@ import React, { useContext, useEffect, useState } from "react";
 
 import { browserhistory } from "./browserhistory";
 import ViewerContext from "./ViewerContext";
-import ViewerStartup from "./ViewerStartup";
+import ViewerStartup, { initializeRpcClientBentleyCloud } from "./ViewerStartup";
 import { Header } from "Header";
 
 const App: React.FC = () => {
@@ -17,19 +17,13 @@ const App: React.FC = () => {
 
  /** Ensure client variables exist. */
  if (!process.env.IMJS_AUTH_CLIENT_CLIENT_ID) {
-  throw new Error(
-   "Please add a valid OIDC client id to the .env file and restart the application. See the README for more information."
-  );
+  throw new Error("Please add a valid OIDC client id to the .env file and restart the application. See the README for more information.");
  }
  if (!process.env.IMJS_AUTH_CLIENT_SCOPES) {
-  throw new Error(
-   "Please add valid scopes for your OIDC client to the .env file and restart the application. See the README for more information."
-  );
+  throw new Error("Please add valid scopes for your OIDC client to the .env file and restart the application. See the README for more information.");
  }
  if (!process.env.IMJS_AUTH_CLIENT_REDIRECT_URI) {
-  throw new Error(
-   "Please add a valid redirect URI to the .env file and restart the application. See the README for more information."
-  );
+  throw new Error("Please add a valid redirect URI to the .env file and restart the application. See the README for more information.");
  }
 
  useEffect(() => {
@@ -75,6 +69,8 @@ const App: React.FC = () => {
  };
 
  const onIModelAppInit = () => {
+  initializeRpcClientBentleyCloud();
+
   // on IModelApp startUp , IModelApp.authorizationClient initially checks if there is an unexpired Access Token in browser and uses that and make the user logged-in
   setIsAuthorized(IModelApp.authorizationClient?.isAuthorized || false);
   IModelApp.authorizationClient?.onUserStateChanged.addListener(async () => {
