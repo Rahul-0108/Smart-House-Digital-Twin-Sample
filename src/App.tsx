@@ -7,6 +7,7 @@ import { browserhistory } from "./browserhistory";
 import ViewerContext from "./ViewerContext";
 import ViewerStartup, { initializeRpcClientBentleyCloud } from "./ViewerStartup";
 import { Header } from "Header";
+import { ITwinHelper } from "ITwinHelper";
 
 const App: React.FC = () => {
  const { contextId, iModelId, authOptions } = useContext(ViewerContext);
@@ -69,7 +70,9 @@ const App: React.FC = () => {
  };
 
  const onIModelAppInit = () => {
-  initializeRpcClientBentleyCloud();
+  if (ITwinHelper.isCustomBackend) {
+   initializeRpcClientBentleyCloud();
+  }
 
   // on IModelApp startUp , IModelApp.authorizationClient initially checks if there is an unexpired Access Token in browser and uses that and make the user logged-in
   setIsAuthorized(IModelApp.authorizationClient?.isAuthorized || false);
