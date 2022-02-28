@@ -1,0 +1,159 @@
+{
+ "$schema": "../../../node_modules/@bentley/presentation-common/Ruleset.schema.json",
+ "id": "simple-viewer-app/Tree",
+ "rules": [
+  {
+   "ruleType": "RootNodes",
+   "autoExpand": true,
+   "specifications": [
+    {
+     "specType": "InstanceNodesOfSpecificClasses", // specification returns nodes for instances of given ECClass(-es) without attempting to join them
+     // to the parent node using some relationship or attribute. This is mostly useful when specifying root nodes
+     // Specifications of ECClasses whose instances should be returned
+     "classes": [
+      {
+       "schemaName": "BisCore",
+       // List of ECClass names.
+       // Each class name may be prefixed with:
+       // - `E:` to exclude class from results
+       // - `PE:` to exclude class and all its sublasses from results
+       // So generally the list may contain `["base_class_name", "PE:derived_class_name"]` to
+       // include all instances of `base_class_name` except all polymorphic instances of
+       // `derived_class_name`
+       "classNames": ["Subject"]
+      }
+     ],
+     "instanceFilter": "this.Parent = NULL",
+     "arePolymorphic": false, // Should all `classes` be handled polymorphically, hit and try using Values
+     "groupByClass": false /*Group instances by ECClass. Defaults to `true`*/,
+     "groupByLabel": false // Group instances by label. Defaults to `true`
+    }
+   ]
+  },
+  {
+   "ruleType": "ChildNodes",
+   "condition": "ParentNode.IsOfClass(\"Subject\", \"BisCore\")",
+   "onlyIfNotHandled": true,
+   "specifications": [
+    {
+     "specType": "RelatedInstanceNodes", // specification returns nodes for instances that are related to the parent instance node through given ECRelationship.
+     // This is the most commonly used specification to create child nodes
+     // Relationship paths from parent node instance class to child node instances' class
+     "relationshipPaths": [
+      {
+       /*Specification of the relationship to use for joining the related instance.*/
+       "relationship": {
+        "schemaName": "BisCore",
+        "className": "SubjectOwnsSubjects"
+       },
+       /*Relationship direction that should be followed to find the target class*/
+       "direction": "Forward"
+      }
+     ],
+     "groupByClass": false,
+     "groupByLabel": false
+    },
+    {
+     "specType": "InstanceNodesOfSpecificClasses",
+     "classes": {
+      "schemaName": "BisCore",
+      "classNames": ["Model"]
+     },
+     "arePolymorphic": true,
+     // Specifications of related instances that can be used in nodes' creation
+     "relatedInstances": [
+      {
+       "relationshipPath": {
+        "relationship": {
+         "schemaName": "BisCore",
+         "className": "ModelModelsElement"
+        },
+        "direction": "Forward",
+        // Specification of the target class. Either relationship's source or target class is used (based
+        // on specified direction) if more specific target class is not specified by this attribute
+        "targetClass": {
+         "schemaName": "BisCore",
+         "className": "InformationPartitionElement"
+        }
+       },
+       // The alias to give for the joined related instance. Used to reference the related instance in
+       // instance filter and customization rules.
+       // **The value must be unique per-specification!**
+       "alias": "partition",
+       // Is the related instance required to exist. If yes, primary instance won't be returned
+
+       // if the related instance doesn't exist. If not, primary instance will be returned, but related
+       // instance will be null.
+       // In SQL terms in can be compared to INNER JOIN vs OUTER JOIN
+       "isRequired": true
+      }
+     ],
+     "instanceFilter": "partition.Parent.Id = parent.ECInstanceId AND NOT this.IsPrivate", // Condition for filtering instances of defined classes
+     "groupByClass": false,
+     "groupByLabel": false
+    }
+   ]
+  },
+  {
+   "ruleType": "ChildNodes",
+   "condition": "ParentNode.IsOfClass(\"Model\", \"BisCore\")",
+   "onlyIfNotHandled": true,
+   "specifications": [
+    {
+     "specType": "RelatedInstanceNodes",
+     "relationshipPaths": [
+      {
+       "relationship": {
+        "schemaName": "BisCore",
+        "className": "ModelContainsElements"
+       },
+       "direction": "Forward"
+      }
+     ],
+     "instanceFilter": "this.Parent = NULL",
+     "groupByClass": false,
+     "groupByLabel": false
+    }
+   ]
+  },
+  {
+   "ruleType": "ChildNodes",
+   "condition": "ParentNode.IsOfClass(\"Element\", \"BisCore\")",
+   "onlyIfNotHandled": true,
+   "specifications": [
+    {
+     "specType": "RelatedInstanceNodes",
+     "relationshipPaths": [
+      {
+       "relationship": {
+        "schemaName": "BisCore",
+        "className": "ElementOwnsChildElements"
+       },
+       "direction": "Forward"
+      }
+     ],
+     "groupByClass": false,
+     "groupByLabel": false
+    }
+   ]
+  },
+  {
+   "ruleType": "ImageIdOverride",
+   "condition": "ThisNode.IsOfClass(\"Subject\", \"BisCore\")",
+   // Defines an image ID that should be used for nodes that meet rule condition. This is
+   // an ECExpression, so ID can be
+   // defined/formatted dynamically based on the context - for example ECInstance property value
+   "imageIdExpression": "IIF(this.Parent.Id = NULL, \"icon-imodel-hollow-2\", \"icon-folder\")"
+  },
+  {
+   "ruleType": "ImageIdOverride",
+   "condition": "ThisNode.IsOfClass(\"Model\", \"BisCore\")",
+   "imageIdExpression": "\"icon-model\""
+  },
+  {
+   "ruleType": "ImageIdOverride",
+   "condition": "ThisNode.IsOfClass(\"Element\", \"BisCore\")",
+   "imageIdExpression": "\"icon-item\""
+  }
+ ]
+}

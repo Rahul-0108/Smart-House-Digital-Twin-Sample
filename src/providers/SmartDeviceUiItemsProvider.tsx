@@ -31,6 +31,7 @@ import { MarkerPinsListWidget } from "./MarkerPinsListWidget";
 import { PlacePin } from "Tools/PlacePin";
 import { LineStringDrawTool } from "Tools/LineStringDrawTool";
 import { SampleLocateTool } from "Tools/AccuSnapToolExamples";
+import { IModelContentTree } from "Tree/IModelContentTree";
 
 export class SmartDeviceUiItemsProvider implements UiItemsProvider {
  public readonly id = "SmartDeviceUiProvider";
@@ -212,6 +213,12 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     },
    };
 
+   const treesWidget: AbstractWidgetProps = {
+    id: "treesWidget",
+    label: "Tree Widget",
+    getWidgetContent: () => <IModelContentTree iModel={UiFramework.getIModelConnection()!}></IModelContentTree>,
+   };
+
    const markersWidget: AbstractWidgetProps = {
     id: "markersWidget",
     label: "Markers Widget",
@@ -242,6 +249,7 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     },
    };
 
+   widgets.push(treesWidget);
    widgets.push(backgroundColorWidget);
    widgets.push(markersWidget);
    widgets.push(widget);
