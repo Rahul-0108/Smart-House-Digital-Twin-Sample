@@ -1,0 +1,47 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+/* eslint-disable no-duplicate-imports */
+import * as React from "react";
+import { useCallback } from "react";
+import { IModelApp, IModelConnection } from "@bentley/imodeljs-frontend";
+import { useOptionalDisposable } from "@bentley/ui-core";
+import { ControlledTree, SelectionMode, usePagedTreeNodeLoader, useTreeModelSource, useVisibleTreeNodes } from "@bentley/ui-components";
+import { IPresentationTreeDataProvider, PresentationTreeDataProvider, useUnifiedSelectionTreeEventHandler } from "@bentley/presentation-components";
+const RULESET_TREE = require("./Tree.ruleset.json"); // eslint-disable-line @typescript-eslint/no-var-requires
+
+/** React properties for the tree component, that accepts an iModel connection with ruleset id */
+export interface IModelConnectionProps {
+ /** iModel whose contents should be displayed in the tree */
+ imodel: IModelConnection;
+}
+
+/** React properties for the tree component, that accepts a data provider */
+export interface DataProviderProps {
+ /** Custom tree data provider. */
+ dataProvider: IPresentationTreeDataProvider;
+}
+
+/** React properties for the tree component */
+export type Props = IModelConnectionProps | DataProviderProps;
+
+/** Tree component for the viewer app */
+export default function SimpleTreeComponent(props: Props) {
+ // eslint-disable-line @typescript-eslint/naming-convention
+ const imodel = (props as IModelConnectionProps).imodel;
+ const pagingSize = 20;
+ const imodelDataProvider = useOptionalDisposable(
+  useCallback(() => {
+   if (imodel) return new PresentationTreeDataProvider({ imodel, ruleset: RULESET_TREE, pagingSize });
+   return undefined;
+  }, [imodel])
+ );
+ const dataProvider = imodelDataProvider ?? (props as DataProviderProps).dataProvider;
+ const modelSource = useTreeModelSource(dataProvider);
+ const nodeLoader = usePagedTreeNodeLoader(dataProvider, 20, modelSource);
+ const eventsHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader, collapsedChildrenDisposalEnabled: true });
+ return (
+  <ControlledTree nodeLoader={nodeLoader} visibleNodes={useVisibleTreeNodes(modelSource)} treeEvents={eventsHandler} selectionMode={SelectionMode.Extended} iconsEnabled={true} />
+ );
+}

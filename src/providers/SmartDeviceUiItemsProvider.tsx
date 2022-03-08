@@ -32,6 +32,7 @@ import { PlacePin } from "Tools/PlacePin";
 import { LineStringDrawTool } from "Tools/LineStringDrawTool";
 import { SampleLocateTool } from "Tools/AccuSnapToolExamples";
 import { IModelContentTree } from "Tree/IModelContentTree";
+import { TableCustomUnifiedSelection } from "Table_propertypane/TableCustomUnifiedSelection";
 
 export class SmartDeviceUiItemsProvider implements UiItemsProvider {
  public readonly id = "SmartDeviceUiProvider";
@@ -239,6 +240,15 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
     },
    };
 
+   const tableWidget: AbstractWidgetProps = {
+    id: "tableWidget", // We should define id to Correctly Save and Restore App Layout
+    label: "TableWidget", // Header of Widget
+    getWidgetContent: () => {
+     // Gets the widget content
+     return <TableCustomUnifiedSelection imodel={UiFramework.getIModelConnection()!}></TableCustomUnifiedSelection>;
+    },
+   };
+
    const propertiesWidget: AbstractWidgetProps = {
     id: "SmartDevicePropertiesWidget",
     label: "Smart Device Properties",
@@ -252,6 +262,7 @@ export class SmartDeviceUiItemsProvider implements UiItemsProvider {
    widgets.push(treesWidget);
    widgets.push(backgroundColorWidget);
    widgets.push(markersWidget);
+   widgets.push(tableWidget);
    widgets.push(widget);
    widgets.push(propertiesWidget);
   } else if (stageId === "DefaultFrontstage" && location === StagePanelLocation.Right && section === StagePanelSection.End) {
